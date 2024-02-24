@@ -89,7 +89,7 @@ endif()
 
 if(NOT USE_SYSTEM_NCNN)
     # build ncnn library
-    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ncnn/CMakeLists.txt")
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/ncnn/CMakeLists.txt")
         message(FATAL_ERROR "The submodules were not downloaded! Please update submodules with \"git submodule update --init --recursive\" and try again.")
     endif()
 
@@ -202,7 +202,7 @@ if(NOT USE_SYSTEM_NCNN)
     option(WITH_LAYER_einsum "" OFF)
     option(WITH_LAYER_deformableconv2d "" OFF)
 
-    add_subdirectory(ncnn)
+    add_subdirectory(external/ncnn)
 endif()
 
 if(USE_SYSTEM_WEBP)
@@ -216,7 +216,7 @@ endif()
 
 if(NOT USE_SYSTEM_WEBP)
     # build libwebp library
-    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libwebp/CMakeLists.txt")
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/libwebp/CMakeLists.txt")
         message(FATAL_ERROR "The submodules were not downloaded! Please update submodules with \"git submodule update --init --recursive\" and try again.")
     endif()
 
@@ -234,9 +234,9 @@ if(NOT USE_SYSTEM_WEBP)
     option(WEBP_NEAR_LOSSLESS "" OFF)
     option(WEBP_ENABLE_SWAP_16BIT_CSP "" OFF)
 
-    add_subdirectory(libwebp)
+    add_subdirectory(external/libwebp)
 
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libwebp/src)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/libwebp/src)
 endif()
 
 waifu2x_add_shader(waifu2x_preproc.comp)
@@ -245,6 +245,8 @@ waifu2x_add_shader(waifu2x_preproc_tta.comp)
 waifu2x_add_shader(waifu2x_postproc_tta.comp)
 
 add_custom_target(generate-spirv DEPENDS ${SHADER_SPV_HEX_FILES})
+
+include_directories(external/dirent external/stb)
 
 add_executable(waifu2x-ncnn-vulkan main.cpp waifu2x.cpp)
 
