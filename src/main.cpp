@@ -948,9 +948,6 @@ int main(int argc, char** argv)
             waifu2x_set(waifu2x[i], WAIFU2X_PARAM_PRE_PADDING, prepadding);
         }
 
-        delete[] parambuf;
-        delete[] modelbuf;
-
         // main routine
         {
             // load image
@@ -1032,6 +1029,9 @@ int main(int argc, char** argv)
             waifu2x_destroy(waifu2x[i]);
         }
         waifu2x.clear();
+
+        delete[] parambuf;
+        delete[] modelbuf;
     }
 
     ncnn::destroy_gpu_instance();
