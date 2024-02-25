@@ -782,6 +782,9 @@ int main(int argc, char** argv)
         sprintf(modelpath, "%s/noise%d_scale2.0x_model.bin", model.c_str(), noise);
     }
 #endif
+#if !NCNN_STDIO || !NCNN_STRING
+    sprintf(parampath, "%s.bin", parampath);
+#endif
 
     path_t paramfullpath = sanitize_filepath(parampath);
     path_t modelfullpath = sanitize_filepath(modelpath);
@@ -890,19 +893,63 @@ int main(int argc, char** argv)
     {
         std::vector<waifu2x_t> waifu2x(use_gpu_count);
 
+#if _WIN32
+        FILE* paramfile = _wfopen(paramfullpath.c_str(), L"rb");
+        if (!paramfile)
+        {
+            fwprintf(stderr, L"failed to open param file %ls\n", paramfullpath.c_str());
+            return -1;
+        }
+        FILE* modelfile = _wfopen(modelfullpath.c_str(), L"rb");
+        if (!modelfile)
+        {
+            fwprintf(stderr, L"failed to open model file %ls\n", modelfullpath.c_str());
+            return -1;
+        }
+#else
+        FILE* paramfile = fopen(paramfullpath.c_str(), "rb");
+        if (!paramfile)
+        {
+            fprintf(stderr, "failed to open param file %s\n", paramfullpath.c_str());
+            return -1;
+        }
+        FILE* modelfile = fopen(modelfullpath.c_str(), "rb");
+        if (!modelfile)
+        {
+            fprintf(stderr, "failed to open model file %s\n", modelfullpath.c_str());
+            return -1;
+        }
+#endif
+        fseek(paramfile, 0, SEEK_END);
+        auto paramsize = ftell(paramfile);
+        fseek(paramfile, 0, SEEK_SET);
+        auto parambuf = new unsigned char[paramsize];
+        fread(parambuf, 1, paramsize, paramfile);
+        fclose(paramfile);
+
+        fseek(modelfile, 0, SEEK_END);
+        auto modelsize = ftell(modelfile);
+        fseek(modelfile, 0, SEEK_SET);
+        auto modelbuf = new unsigned char[modelsize];
+        fread(modelbuf, 1, modelsize, modelfile);
+        fclose(modelfile);
+
         for (int i=0; i<use_gpu_count; i++)
         {
             int num_threads = gpuid[i] == -1 ? jobs_proc[i] : 1;
 
             waifu2x[i] = waifu2x_create(gpuid[i], tta_mode, num_threads);
 
-            waifu2x_load(waifu2x[i], paramfullpath.c_str(), modelfullpath.c_str());
+            waifu2x_load(waifu2x[i], parambuf, modelbuf);
 
             waifu2x_set(waifu2x[i], WAIFU2X_PARAM_NOISE, noise);
             waifu2x_set(waifu2x[i], WAIFU2X_PARAM_SCALE, (scale >= 2) ? 2 : scale);
             waifu2x_set(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE, tilesize[i]);
             waifu2x_set(waifu2x[i], WAIFU2X_PARAM_PRE_PADDING, prepadding);
         }
+
+        delete[] parambuf;
+        delete[] modelbuf;
 
         // main routine
         {

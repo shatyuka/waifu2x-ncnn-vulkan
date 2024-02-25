@@ -34,11 +34,7 @@ Waifu2x::~Waifu2x()
     delete bicubic_2x;
 }
 
-#if _WIN32
-int Waifu2x::load(const std::wstring& parampath, const std::wstring& modelpath)
-#else
-int Waifu2x::load(const std::string& parampath, const std::string& modelpath)
-#endif
+int Waifu2x::load(const unsigned char* param, const unsigned char* model)
 {
     net.opt.use_vulkan_compute = vkdev ? true : false;
     net.opt.use_fp16_packed = true;
@@ -47,34 +43,15 @@ int Waifu2x::load(const std::string& parampath, const std::string& modelpath)
     net.opt.use_int8_storage = true;
 
     net.set_vulkan_device(vkdev);
-
-#if _WIN32
-    {
-        FILE* fp = _wfopen(parampath.c_str(), L"rb");
-        if (!fp)
-        {
-            fwprintf(stderr, L"_wfopen %ls failed\n", parampath.c_str());
-        }
-
-        net.load_param(fp);
-
-        fclose(fp);
-    }
-    {
-        FILE* fp = _wfopen(modelpath.c_str(), L"rb");
-        if (!fp)
-        {
-            fwprintf(stderr, L"_wfopen %ls failed\n", modelpath.c_str());
-        }
-
-        net.load_model(fp);
-
-        fclose(fp);
-    }
+#if NCNN_STDIO && NCNN_STRING
+    if (*(int*)param == 7767517)
+        net.load_param(param);
+    else
+        net.load_param_mem(reinterpret_cast<const char *>(param));
 #else
-    net.load_param(parampath.c_str());
-    net.load_model(modelpath.c_str());
+    net.load_param(param);
 #endif
+    net.load_model(model);
 
     // initialize preprocess and postprocess pipeline
     if (vkdev)
@@ -127,7 +104,7 @@ int Waifu2x::load(const std::string& parampath, const std::string& modelpath)
 
     // bicubic 2x for alpha channel
     {
-        bicubic_2x = ncnn::create_layer("Interp");
+        bicubic_2x = ncnn::create_layer(ncnn::LayerType::Interp);
         bicubic_2x->vkdev = vkdev;
 
         ncnn::ParamDict pd;
@@ -332,10 +309,10 @@ int Waifu2x::process(const ncnn::Mat& inimage, ncnn::Mat& outimage) const
                     ex.set_blob_vkallocator(blob_vkallocator);
                     ex.set_workspace_vkallocator(blob_vkallocator);
                     ex.set_staging_vkallocator(staging_vkallocator);
-
-                    ex.input("Input1", in_tile_gpu[ti]);
-
-                    ex.extract("Eltwise4", out_tile_gpu[ti], cmd);
+                    // Input1
+                    ex.input(0, in_tile_gpu[ti]);
+                    // Eltwise4
+                    ex.extract((int)net.blobs().size() - 1, out_tile_gpu[ti], cmd);
                 }
 
                 ncnn::VkMat out_alpha_tile_gpu;
@@ -441,10 +418,10 @@ int Waifu2x::process(const ncnn::Mat& inimage, ncnn::Mat& outimage) const
                     ex.set_blob_vkallocator(blob_vkallocator);
                     ex.set_workspace_vkallocator(blob_vkallocator);
                     ex.set_staging_vkallocator(staging_vkallocator);
-
-                    ex.input("Input1", in_tile_gpu);
-
-                    ex.extract("Eltwise4", out_tile_gpu, cmd);
+                    // Input1
+                    ex.input(0, in_tile_gpu);
+                    // Eltwise4
+                    ex.extract((int)net.blobs().size() - 1, out_tile_gpu, cmd);
                 }
 
                 ncnn::VkMat out_alpha_tile_gpu;
@@ -711,10 +688,10 @@ int Waifu2x::process_cpu(const ncnn::Mat& inimage, ncnn::Mat& outimage) const
                 for (int ti = 0; ti < 8; ti++)
                 {
                     ncnn::Extractor ex = net.create_extractor();
-
-                    ex.input("Input1", in_tile[ti]);
-
-                    ex.extract("Eltwise4", out_tile[ti]);
+                    // Input1
+                    ex.input(0, in_tile[ti]);
+                    // Eltwise4
+                    ex.extract((int)net.blobs().size() - 1, out_tile[ti]);
                 }
 
                 ncnn::Mat out_alpha_tile;
@@ -812,10 +789,10 @@ int Waifu2x::process_cpu(const ncnn::Mat& inimage, ncnn::Mat& outimage) const
                 ncnn::Mat out_tile;
                 {
                     ncnn::Extractor ex = net.create_extractor();
-
-                    ex.input("Input1", in_tile);
-
-                    ex.extract("Eltwise4", out_tile);
+                    // Input1
+                    ex.input(0, in_tile);
+                    // Eltwise4
+                    ex.extract((int)net.blobs().size() - 1, out_tile);
                 }
 
                 ncnn::Mat out_alpha_tile;

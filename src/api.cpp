@@ -15,14 +15,10 @@ void waifu2x_destroy(waifu2x_t waifu2x)
     delete (Waifu2x*)waifu2x;
 }
 
-#if _WIN32
-int waifu2x_load(waifu2x_t waifu2x, const wchar_t* param_path, const wchar_t* model_path)
-#else
-int waifu2x_load(waifu2x_t waifu2x, const char* param_path, const char* model_path)
-#endif
+int waifu2x_load(waifu2x_t waifu2x, const unsigned char* param, const unsigned char* model)
 {
     Waifu2x* instance = (Waifu2x*)waifu2x;
-    return instance->load(param_path, model_path);
+    return instance->load(param, model);
 }
 
 int waifu2x_process(waifu2x_t waifu2x, int w, int h, int c, const void* in_data, void* out_data)

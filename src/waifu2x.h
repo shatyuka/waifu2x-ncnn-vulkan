@@ -9,6 +9,7 @@
 #include "net.h"
 #include "gpu.h"
 #include "layer.h"
+#include "layer_type.h"
 
 class Waifu2x
 {
@@ -16,11 +17,7 @@ public:
     Waifu2x(int gpuid, bool tta_mode = false, int num_threads = 1);
     ~Waifu2x();
 
-#if _WIN32
-    int load(const std::wstring& parampath, const std::wstring& modelpath);
-#else
-    int load(const std::string& parampath, const std::string& modelpath);
-#endif
+    int load(const unsigned char* param, const unsigned char* model);
 
     int process(const ncnn::Mat& inimage, ncnn::Mat& outimage) const;
 

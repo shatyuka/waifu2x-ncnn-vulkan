@@ -32,11 +32,7 @@ typedef void* waifu2x_t;
 
 EXTERN_C DLL_EXPORT waifu2x_t waifu2x_create(int gpuid, bool tta_mode = false, int num_threads = 1);
 EXTERN_C DLL_EXPORT void waifu2x_destroy(waifu2x_t waifu2x);
-#if _WIN32
-EXTERN_C DLL_EXPORT int waifu2x_load(waifu2x_t waifu2x, const wchar_t* param_path, const wchar_t* model_path);
-#else
-EXTERN_C DLL_EXPORT int waifu2x_load(waifu2x_t waifu2x, const char* param_path, const char* model_path);
-#endif
+EXTERN_C DLL_EXPORT int waifu2x_load(waifu2x_t waifu2x, const unsigned char* param, const unsigned char* model);
 EXTERN_C DLL_EXPORT int waifu2x_process(waifu2x_t waifu2x, int w, int h, int c, const void* in_data, void* out_data);
 EXTERN_C DLL_EXPORT int waifu2x_process_cpu(waifu2x_t waifu2x, int w, int h, int c, const void* in_data, void* out_data);
 EXTERN_C DLL_EXPORT int waifu2x_set(waifu2x_t waifu2x, int param, int value);
