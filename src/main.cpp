@@ -94,7 +94,7 @@ static std::vector<int> parse_optarg_int_array(const char* optarg)
 #include "gpu.h"
 #include "platform.h"
 
-#include "waifu2x.h"
+#include "api.h"
 
 #include "filesystem_utils.h"
 
@@ -308,13 +308,13 @@ void* load(void* args)
 class ProcThreadParams
 {
 public:
-    const Waifu2x* waifu2x;
+    waifu2x_t waifu2x;
 };
 
 void* proc(void* args)
 {
     const ProcThreadParams* ptp = (const ProcThreadParams*)args;
-    const Waifu2x* waifu2x = ptp->waifu2x;
+    const waifu2x_t waifu2x = ptp->waifu2x;
 
     for (;;)
     {
@@ -329,7 +329,7 @@ void* proc(void* args)
         if (scale == 1)
         {
             v.outimage = ncnn::Mat(v.inimage.w, v.inimage.h, (size_t)v.inimage.elemsize, (int)v.inimage.elemsize);
-            waifu2x->process(v.inimage, v.outimage);
+            waifu2x_process(waifu2x, v.inimage.w, v.inimage.h, v.inimage.elempack, v.inimage.data, v.outimage.data);
 
             tosave.put(v);
             continue;
@@ -358,13 +358,13 @@ void* proc(void* args)
         }
 
         v.outimage = ncnn::Mat(v.inimage.w * 2, v.inimage.h * 2, (size_t)v.inimage.elemsize, (int)v.inimage.elemsize);
-        waifu2x->process(v.inimage, v.outimage);
+        waifu2x_process(waifu2x, v.inimage.w, v.inimage.h, v.inimage.elempack, v.inimage.data, v.outimage.data);
 
         for (int i = 1; i < scale_run_count; i++)
         {
             ncnn::Mat tmp = v.outimage;
             v.outimage = ncnn::Mat(tmp.w * 2, tmp.h * 2, (size_t)v.inimage.elemsize, (int)v.inimage.elemsize);
-            waifu2x->process(tmp, v.outimage);
+            waifu2x_process(waifu2x, tmp.w, tmp.h, tmp.elempack, tmp.data, v.outimage.data);
         }
 
         tosave.put(v);
@@ -888,20 +888,20 @@ int main(int argc, char** argv)
     }
 
     {
-        std::vector<Waifu2x*> waifu2x(use_gpu_count);
+        std::vector<waifu2x_t> waifu2x(use_gpu_count);
 
         for (int i=0; i<use_gpu_count; i++)
         {
             int num_threads = gpuid[i] == -1 ? jobs_proc[i] : 1;
 
-            waifu2x[i] = new Waifu2x(gpuid[i], tta_mode, num_threads);
+            waifu2x[i] = waifu2x_create(gpuid[i], tta_mode, num_threads);
 
-            waifu2x[i]->load(paramfullpath, modelfullpath);
+            waifu2x_load(waifu2x[i], paramfullpath.c_str(), modelfullpath.c_str());
 
-            waifu2x[i]->noise = noise;
-            waifu2x[i]->scale = (scale >= 2) ? 2 : scale;
-            waifu2x[i]->tilesize = tilesize[i];
-            waifu2x[i]->prepadding = prepadding;
+            waifu2x_set(waifu2x[i], WAIFU2X_PARAM_NOISE, noise);
+            waifu2x_set(waifu2x[i], WAIFU2X_PARAM_SCALE, (scale >= 2) ? 2 : scale);
+            waifu2x_set(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE, tilesize[i]);
+            waifu2x_set(waifu2x[i], WAIFU2X_PARAM_PRE_PADDING, prepadding);
         }
 
         // main routine
@@ -982,7 +982,7 @@ int main(int argc, char** argv)
 
         for (int i=0; i<use_gpu_count; i++)
         {
-            delete waifu2x[i];
+            waifu2x_destroy(waifu2x[i]);
         }
         waifu2x.clear();
     }

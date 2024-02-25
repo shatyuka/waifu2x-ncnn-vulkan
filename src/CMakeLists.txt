@@ -4,6 +4,8 @@ cmake_policy(SET CMP0091 NEW)
 set(CMAKE_POLICY_DEFAULT_CMP0091 NEW)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+set(CMAKE_CXX_STANDARD 11)
+
 project(waifu2x-ncnn-vulkan)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -248,9 +250,15 @@ add_custom_target(generate-spirv DEPENDS ${SHADER_SPV_HEX_FILES})
 
 include_directories(external/dirent external/stb)
 
-add_executable(waifu2x-ncnn-vulkan main.cpp waifu2x.cpp)
+add_executable(waifu2x-ncnn-vulkan main.cpp)
+add_library(waifu2x-ncnn-vulkan-lib SHARED api.cpp waifu2x.cpp)
+add_library(waifu2x-ncnn-vulkan-lib-static STATIC api.cpp waifu2x.cpp)
+set_target_properties(waifu2x-ncnn-vulkan-lib PROPERTIES OUTPUT_NAME "waifu2x-ncnn-vulkan")
+set_target_properties(waifu2x-ncnn-vulkan-lib-static PROPERTIES OUTPUT_NAME "waifu2x-ncnn-vulkan")
 
-add_dependencies(waifu2x-ncnn-vulkan generate-spirv)
+add_dependencies(waifu2x-ncnn-vulkan waifu2x-ncnn-vulkan-lib-static)
+add_dependencies(waifu2x-ncnn-vulkan-lib generate-spirv)
+add_dependencies(waifu2x-ncnn-vulkan-lib-static generate-spirv)
 
 set(WAIFU2X_LINK_LIBRARIES ncnn webp ${Vulkan_LIBRARY})
 
@@ -276,4 +284,6 @@ if(APPLE AND USE_STATIC_MOLTENVK)
     )
 endif()
 
-target_link_libraries(waifu2x-ncnn-vulkan ${WAIFU2X_LINK_LIBRARIES})
+target_link_libraries(waifu2x-ncnn-vulkan waifu2x-ncnn-vulkan-lib-static ${WAIFU2X_LINK_LIBRARIES})
+target_link_libraries(waifu2x-ncnn-vulkan-lib ${WAIFU2X_LINK_LIBRARIES})
+target_link_libraries(waifu2x-ncnn-vulkan-lib-static ${WAIFU2X_LINK_LIBRARIES})
