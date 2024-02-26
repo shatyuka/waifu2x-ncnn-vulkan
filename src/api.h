@@ -37,5 +37,6 @@ EXTERN_C DLL_EXPORT int waifu2x_process(waifu2x_t waifu2x, int w, int h, int c, 
 EXTERN_C DLL_EXPORT int waifu2x_process_cpu(waifu2x_t waifu2x, int w, int h, int c, const void* in_data, void* out_data);
 EXTERN_C DLL_EXPORT int waifu2x_set(waifu2x_t waifu2x, int param, int value);
 EXTERN_C DLL_EXPORT int waifu2x_get(waifu2x_t waifu2x, int param);
+EXTERN_C DLL_EXPORT bool waifu2x_support_gpu(waifu2x_t waifu2x);
 
 #endif // API_H

@@ -856,3 +856,8 @@ int Waifu2x::process_cpu(const ncnn::Mat& inimage, ncnn::Mat& outimage) const
 
     return 0;
 }
+
+bool Waifu2x::support_gpu() const
+{
+    return vkdev != nullptr;
+}

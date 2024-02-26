@@ -23,6 +23,8 @@ public:
 
     int process_cpu(const ncnn::Mat& inimage, ncnn::Mat& outimage) const;
 
+    bool support_gpu() const;
+
 public:
     // waifu2x parameters
     int noise;

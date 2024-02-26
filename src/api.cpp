@@ -79,3 +79,9 @@ int waifu2x_get(waifu2x_t waifu2x, int param)
         return 0;
     }
 }
+
+bool waifu2x_support_gpu(waifu2x_t waifu2x)
+{
+    Waifu2x* instance = (Waifu2x*)waifu2x;
+    return instance->support_gpu();
+}

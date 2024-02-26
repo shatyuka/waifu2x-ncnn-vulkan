@@ -946,6 +946,11 @@ int main(int argc, char** argv)
             waifu2x_set(waifu2x[i], WAIFU2X_PARAM_SCALE, (scale >= 2) ? 2 : scale);
             waifu2x_set(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE, tilesize[i]);
             waifu2x_set(waifu2x[i], WAIFU2X_PARAM_PRE_PADDING, prepadding);
+
+            if (waifu2x_support_gpu(waifu2x[i]))
+                printf("GPU %d\n", i);
+            else
+                printf("CPU %d\n", i);
         }
 
         // main routine
