@@ -7,8 +7,10 @@
 
 #include "waifu2x_preproc.comp.hex.h"
 #include "waifu2x_postproc.comp.hex.h"
+#ifdef TTA_MODE
 #include "waifu2x_preproc_tta.comp.hex.h"
 #include "waifu2x_postproc_tta.comp.hex.h"
+#endif
 
 Waifu2x::Waifu2x(int gpuid, bool _tta_mode, int num_threads)
 {
@@ -19,7 +21,9 @@ Waifu2x::Waifu2x(int gpuid, bool _tta_mode, int num_threads)
     waifu2x_preproc = 0;
     waifu2x_postproc = 0;
     bicubic_2x = 0;
+#ifdef TTA_MODE
     tta_mode = _tta_mode;
+#endif
 }
 
 Waifu2x::~Waifu2x()
@@ -70,10 +74,14 @@ int Waifu2x::load(const unsigned char* param, const unsigned char* model)
                 ncnn::MutexLockGuard guard(lock);
                 if (spirv.empty())
                 {
+#ifdef TTA_MODE
                     if (tta_mode)
                         compile_spirv_module(waifu2x_preproc_tta_comp_data, sizeof(waifu2x_preproc_tta_comp_data), net.opt, spirv);
                     else
                         compile_spirv_module(waifu2x_preproc_comp_data, sizeof(waifu2x_preproc_comp_data), net.opt, spirv);
+#else
+                    compile_spirv_module(waifu2x_preproc_comp_data, sizeof(waifu2x_preproc_comp_data), net.opt, spirv);
+#endif
                 }
             }
 
@@ -89,10 +97,14 @@ int Waifu2x::load(const unsigned char* param, const unsigned char* model)
                 ncnn::MutexLockGuard guard(lock);
                 if (spirv.empty())
                 {
+#ifdef TTA_MODE
                     if (tta_mode)
                         compile_spirv_module(waifu2x_postproc_tta_comp_data, sizeof(waifu2x_postproc_tta_comp_data), net.opt, spirv);
                     else
                         compile_spirv_module(waifu2x_postproc_comp_data, sizeof(waifu2x_postproc_comp_data), net.opt, spirv);
+#else
+                    compile_spirv_module(waifu2x_postproc_comp_data, sizeof(waifu2x_postproc_comp_data), net.opt, spirv);
+#endif
                 }
             }
 
@@ -238,7 +250,7 @@ int Waifu2x::process(const ncnn::Mat& inimage, ncnn::Mat& outimage) const
             {
                 prepadding_right += (tile_w_nopad + 1) / 2 * 2 - tile_w_nopad;
             }
-
+#ifdef TTA_MODE
             if (tta_mode)
             {
                 // preproc
@@ -364,6 +376,7 @@ int Waifu2x::process(const ncnn::Mat& inimage, ncnn::Mat& outimage) const
                 }
             }
             else
+ #endif
             {
                 // preproc
                 ncnn::VkMat in_tile_gpu;
@@ -594,7 +607,7 @@ int Waifu2x::process_cpu(const ncnn::Mat& inimage, ncnn::Mat& outimage) const
             }
 
             ncnn::Mat out;
-
+#ifdef TTA_MODE
             if (tta_mode)
             {
                 // split alpha and preproc
@@ -750,6 +763,7 @@ int Waifu2x::process_cpu(const ncnn::Mat& inimage, ncnn::Mat& outimage) const
                 }
             }
             else
+#endif
             {
                 // split alpha and preproc
                 ncnn::Mat in_tile;

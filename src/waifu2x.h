@@ -38,7 +38,9 @@ private:
     ncnn::Pipeline* waifu2x_preproc;
     ncnn::Pipeline* waifu2x_postproc;
     ncnn::Layer* bicubic_2x;
+#ifdef TTA_MODE
     bool tta_mode;
+#endif
 };
 
 #endif // WAIFU2X_H

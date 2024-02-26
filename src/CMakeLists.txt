@@ -15,6 +15,7 @@ endif()
 option(USE_SYSTEM_NCNN "build with system libncnn" OFF)
 option(USE_SYSTEM_WEBP "build with system libwebp" OFF)
 option(USE_STATIC_MOLTENVK "link moltenvk static library" ON)
+option(TTA_MODE "enable tta mode" OFF)
 
 find_package(Threads)
 find_package(OpenMP)
@@ -257,8 +258,11 @@ endif()
 
 waifu2x_add_shader(waifu2x_preproc.comp)
 waifu2x_add_shader(waifu2x_postproc.comp)
-waifu2x_add_shader(waifu2x_preproc_tta.comp)
-waifu2x_add_shader(waifu2x_postproc_tta.comp)
+if(TTA_MODE)
+    waifu2x_add_shader(waifu2x_preproc_tta.comp)
+    waifu2x_add_shader(waifu2x_postproc_tta.comp)
+    add_compile_definitions(TTA_MODE)
+endif()
 
 add_custom_target(generate-spirv DEPENDS ${SHADER_SPV_HEX_FILES})
 
