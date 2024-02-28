@@ -37,28 +37,22 @@ int waifu2x_process_cpu(waifu2x_t waifu2x, int w, int h, int c, const void* in_d
     return instance->process_cpu(in, out);
 }
 
-#define SET_VALUE(old, new) \
-    ({ \
-    const auto __old_value = old; \
-    old = new; \
-    __old_value; \
-    })
-
-int waifu2x_set(waifu2x_t waifu2x, int param, int value)
+void waifu2x_set(waifu2x_t waifu2x, int param, int value)
 {
     Waifu2x* instance = (Waifu2x*)waifu2x;
     switch (param)
     {
     case WAIFU2X_PARAM_NOISE:
-        return SET_VALUE(instance->noise, value);
+        instance->noise = value;
+        break;
     case WAIFU2X_PARAM_SCALE:
-        return SET_VALUE(instance->scale, value);
+        instance->scale = value;
+        break;
     case WAIFU2X_PARAM_TILE_SIZE:
-        return SET_VALUE(instance->tilesize, value);
-    case WAIFU2X_PARAM_PRE_PADDING:
-        return SET_VALUE(instance->prepadding, value);
+        instance->tilesize = value;
+        break;
     default:
-        return 0;
+        break;
     }
 }
 
@@ -73,8 +67,6 @@ int waifu2x_get(waifu2x_t waifu2x, int param)
         return instance->scale;
     case WAIFU2X_PARAM_TILE_SIZE:
         return instance->tilesize;
-    case WAIFU2X_PARAM_PRE_PADDING:
-        return instance->prepadding;
     default:
         return 0;
     }

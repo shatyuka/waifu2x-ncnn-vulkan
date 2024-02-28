@@ -30,7 +30,6 @@ public:
     int noise;
     int scale;
     int tilesize;
-    int prepadding;
 
 private:
     ncnn::VulkanDevice* vkdev;
@@ -41,6 +40,7 @@ private:
 #ifdef TTA_MODE
     bool tta_mode;
 #endif
+    int prepadding;
 };
 
 #endif // WAIFU2X_H

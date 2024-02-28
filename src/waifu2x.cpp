@@ -128,6 +128,54 @@ int Waifu2x::load(const unsigned char* param, const unsigned char* model)
         bicubic_2x->create_pipeline(net.opt);
     }
 
+    // default params
+    {
+        bool cunet = net.layers().size() > 16;
+        if (cunet)
+        {
+            if (noise != -1 && scale == 1)
+                prepadding = 28;
+            else
+                prepadding = 18;
+        }
+        else
+        {
+            prepadding = 7;
+        }
+
+        if (vkdev == 0)
+        {
+            // cpu only
+            tilesize = 400;
+        }
+        else
+        {
+            uint32_t heap_budget = vkdev->get_heap_budget();
+            if (cunet)
+            {
+                if (heap_budget > 2600)
+                    tilesize = 400;
+                else if (heap_budget > 740)
+                    tilesize = 200;
+                else if (heap_budget > 250)
+                    tilesize = 100;
+                else
+                    tilesize = 32;
+            }
+            else
+            {
+                if (heap_budget > 1900)
+                    tilesize = 400;
+                else if (heap_budget > 550)
+                    tilesize = 200;
+                else if (heap_budget > 190)
+                    tilesize = 100;
+                else
+                    tilesize = 32;
+            }
+        }
+    }
+
     return 0;
 }
 

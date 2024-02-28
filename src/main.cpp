@@ -714,37 +714,6 @@ int main(int argc, char** argv)
         }
     }
 
-    int prepadding = 0;
-
-    if (model.find(PATHSTR("models-cunet")) != path_t::npos)
-    {
-        if (noise == -1)
-        {
-            prepadding = 18;
-        }
-        else if (scale == 1)
-        {
-            prepadding = 28;
-        }
-        else if (scale == 2 || scale == 4 || scale == 8 || scale == 16 || scale == 32)
-        {
-            prepadding = 18;
-        }
-    }
-    else if (model.find(PATHSTR("models-upconv_7_anime_style_art_rgb")) != path_t::npos)
-    {
-        prepadding = 7;
-    }
-    else if (model.find(PATHSTR("models-upconv_7_photo")) != path_t::npos)
-    {
-        prepadding = 7;
-    }
-    else
-    {
-        fprintf(stderr, "unknown model dir type\n");
-        return -1;
-    }
-
 #if _WIN32
     wchar_t parampath[256];
     wchar_t modelpath[256];
@@ -844,52 +813,6 @@ int main(int argc, char** argv)
         }
     }
 
-    for (int i=0; i<use_gpu_count; i++)
-    {
-        if (tilesize[i] != 0)
-            continue;
-
-        if (gpuid[i] == -1)
-        {
-            // cpu only
-            tilesize[i] = 400;
-            continue;
-        }
-
-        uint32_t heap_budget = ncnn::get_gpu_device(gpuid[i])->get_heap_budget();
-
-        if (path_is_directory(inputpath) && path_is_directory(outputpath))
-        {
-            // multiple gpu jobs share the same heap
-            heap_budget /= jobs_proc_per_gpu[gpuid[i]];
-        }
-
-        // more fine-grained tilesize policy here
-        if (model.find(PATHSTR("models-cunet")) != path_t::npos)
-        {
-            if (heap_budget > 2600)
-                tilesize[i] = 400;
-            else if (heap_budget > 740)
-                tilesize[i] = 200;
-            else if (heap_budget > 250)
-                tilesize[i] = 100;
-            else
-                tilesize[i] = 32;
-        }
-        else if (model.find(PATHSTR("models-upconv_7_anime_style_art_rgb")) != path_t::npos
-            || model.find(PATHSTR("models-upconv_7_photo")) != path_t::npos)
-        {
-            if (heap_budget > 1900)
-                tilesize[i] = 400;
-            else if (heap_budget > 550)
-                tilesize[i] = 200;
-            else if (heap_budget > 190)
-                tilesize[i] = 100;
-            else
-                tilesize[i] = 32;
-        }
-    }
-
     {
         std::vector<waifu2x_t> waifu2x(use_gpu_count);
 
@@ -944,8 +867,15 @@ int main(int argc, char** argv)
 
             waifu2x_set(waifu2x[i], WAIFU2X_PARAM_NOISE, noise);
             waifu2x_set(waifu2x[i], WAIFU2X_PARAM_SCALE, (scale >= 2) ? 2 : scale);
-            waifu2x_set(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE, tilesize[i]);
-            waifu2x_set(waifu2x[i], WAIFU2X_PARAM_PRE_PADDING, prepadding);
+            if (tilesize[i])
+            {
+                waifu2x_set(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE, tilesize[i]);
+            }
+            else if (gpuid[i] != -1)
+            {
+                auto current_tilesize = waifu2x_get(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE);
+                waifu2x_set(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE, current_tilesize / jobs_proc_per_gpu[gpuid[i]]);
+            }
 
             if (waifu2x_support_gpu(waifu2x[i]))
                 printf("GPU %d\n", i);
