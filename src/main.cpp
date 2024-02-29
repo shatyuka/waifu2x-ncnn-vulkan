@@ -752,7 +752,11 @@ int main(int argc, char** argv)
     }
 #endif
 #if !NCNN_STDIO || !NCNN_STRING
+#if _WIN32
+    swprintf(parampath, 256, L"%s.bin", parampath);
+#else
     sprintf(parampath, "%s.bin", parampath);
+#endif
 #endif
 
     path_t paramfullpath = sanitize_filepath(parampath);
