@@ -269,6 +269,7 @@ add_library(waifu2x-ncnn-vulkan-lib SHARED api.cpp waifu2x.cpp)
 add_library(waifu2x-ncnn-vulkan-lib-static STATIC api.cpp waifu2x.cpp)
 set_target_properties(waifu2x-ncnn-vulkan-lib PROPERTIES OUTPUT_NAME "waifu2x-ncnn-vulkan")
 set_target_properties(waifu2x-ncnn-vulkan-lib-static PROPERTIES OUTPUT_NAME "waifu2x-ncnn-vulkan-static")
+target_compile_definitions(waifu2x-ncnn-vulkan-lib PRIVATE _WINDLL)
 
 add_dependencies(waifu2x-ncnn-vulkan waifu2x-ncnn-vulkan-lib-static)
 add_dependencies(waifu2x-ncnn-vulkan-lib generate-spirv)
