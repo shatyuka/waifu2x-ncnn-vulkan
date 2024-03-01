@@ -45,6 +45,7 @@ int Waifu2x::load(const unsigned char* param, const unsigned char* model)
     net.opt.use_fp16_storage = true;
     net.opt.use_fp16_arithmetic = false;
     net.opt.use_int8_storage = true;
+    net.opt.use_sgemm_convolution = vkdev ? true : false;
 
     net.set_vulkan_device(vkdev);
 #if NCNN_STDIO && NCNN_STRING
