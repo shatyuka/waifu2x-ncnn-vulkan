@@ -7,12 +7,18 @@
 
 waifu2x_t waifu2x_create(int gpuid, bool tta_mode, int num_threads)
 {
+    if (gpuid >= 0 && ncnn::create_gpu_instance())
+    {
+        ncnn::destroy_gpu_instance();
+        return 0;
+    }
     return (waifu2x_t)new Waifu2x(gpuid, tta_mode, num_threads);
 }
 
 void waifu2x_destroy(waifu2x_t waifu2x)
 {
     delete (Waifu2x*)waifu2x;
+    ncnn::destroy_gpu_instance();
 }
 
 int waifu2x_load(waifu2x_t waifu2x, const unsigned char* param, const unsigned char* model)
