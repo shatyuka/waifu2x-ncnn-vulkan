@@ -869,22 +869,19 @@ int main(int argc, char** argv)
 
             waifu2x_load(waifu2x[i], parambuf, modelbuf);
 
-            waifu2x_set(waifu2x[i], WAIFU2X_PARAM_NOISE, noise);
-            waifu2x_set(waifu2x[i], WAIFU2X_PARAM_SCALE, (scale >= 2) ? 2 : scale);
+            waifu2x_set_param(waifu2x[i], WAIFU2X_PARAM_NOISE, noise);
+            waifu2x_set_param(waifu2x[i], WAIFU2X_PARAM_SCALE, (scale >= 2) ? 2 : scale);
             if (tilesize[i])
             {
-                waifu2x_set(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE, tilesize[i]);
+                waifu2x_set_param(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE, tilesize[i]);
             }
             else if (gpuid[i] != -1)
             {
-                auto current_tilesize = waifu2x_get(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE);
-                waifu2x_set(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE, current_tilesize / jobs_proc_per_gpu[gpuid[i]]);
+                auto current_tilesize = waifu2x_get_param(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE);
+                waifu2x_set_param(waifu2x[i], WAIFU2X_PARAM_TILE_SIZE, current_tilesize / jobs_proc_per_gpu[gpuid[i]]);
             }
 
-            if (waifu2x_support_gpu(waifu2x[i]))
-                printf("GPU %d\n", i);
-            else
-                printf("CPU %d\n", i);
+            printf("%s\n", ncnn_get_gpu_name(gpuid[i]));
         }
 
         // main routine

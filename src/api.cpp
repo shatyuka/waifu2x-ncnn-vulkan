@@ -5,20 +5,25 @@
 #include "api.h"
 #include "waifu2x.h"
 
+int ncnn_get_default_gpu_index()
+{
+    return ncnn::get_default_gpu_index();
+}
+
+const char* ncnn_get_gpu_name(int gpuid)
+{
+    if (gpuid < 0) return "CPU";
+    return ncnn::get_gpu_info(gpuid).device_name();
+}
+
 waifu2x_t waifu2x_create(int gpuid, bool tta_mode, int num_threads)
 {
-    if (gpuid >= 0 && ncnn::create_gpu_instance())
-    {
-        ncnn::destroy_gpu_instance();
-        return 0;
-    }
     return (waifu2x_t)new Waifu2x(gpuid, tta_mode, num_threads);
 }
 
 void waifu2x_destroy(waifu2x_t waifu2x)
 {
     delete (Waifu2x*)waifu2x;
-    ncnn::destroy_gpu_instance();
 }
 
 int waifu2x_load(waifu2x_t waifu2x, const unsigned char* param, const unsigned char* model)
@@ -43,7 +48,7 @@ int waifu2x_process_cpu(waifu2x_t waifu2x, int w, int h, int c, const void* in_d
     return instance->process_cpu(in, out);
 }
 
-void waifu2x_set(waifu2x_t waifu2x, int param, int value)
+void waifu2x_set_param(waifu2x_t waifu2x, int param, int value)
 {
     Waifu2x* instance = (Waifu2x*)waifu2x;
     switch (param)
@@ -62,7 +67,7 @@ void waifu2x_set(waifu2x_t waifu2x, int param, int value)
     }
 }
 
-int waifu2x_get(waifu2x_t waifu2x, int param)
+int waifu2x_get_param(waifu2x_t waifu2x, int param)
 {
     Waifu2x* instance = (Waifu2x*)waifu2x;
     switch (param)
@@ -76,10 +81,4 @@ int waifu2x_get(waifu2x_t waifu2x, int param)
     default:
         return 0;
     }
-}
-
-bool waifu2x_support_gpu(waifu2x_t waifu2x)
-{
-    Waifu2x* instance = (Waifu2x*)waifu2x;
-    return instance->support_gpu();
 }
