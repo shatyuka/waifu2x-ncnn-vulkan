@@ -16,7 +16,8 @@ Waifu2x::Waifu2x(int gpuid, bool _tta_mode, int num_threads)
 {
     vkdev = gpuid == -1 ? 0 : ncnn::get_gpu_device(gpuid);
 
-    net.opt.num_threads = num_threads;
+    if (num_threads > 0)
+        net.opt.num_threads = num_threads;
 
     waifu2x_preproc = 0;
     waifu2x_postproc = 0;

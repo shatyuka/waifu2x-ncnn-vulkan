@@ -14,7 +14,7 @@
 class Waifu2x
 {
 public:
-    Waifu2x(int gpuid, bool tta_mode = false, int num_threads = 1);
+    Waifu2x(int gpuid, bool tta_mode = false, int num_threads = 0);
     ~Waifu2x();
 
     int load(const unsigned char* param, const unsigned char* model);
