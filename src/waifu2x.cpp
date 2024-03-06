@@ -37,6 +37,11 @@ Waifu2x::~Waifu2x()
 
     bicubic_2x->destroy_pipeline(net.opt);
     delete bicubic_2x;
+
+    net.clear();
+
+    if (vkdev)
+        ncnn::destroy_gpu_instance();
 }
 
 int Waifu2x::load(const unsigned char* param, const unsigned char* model)
