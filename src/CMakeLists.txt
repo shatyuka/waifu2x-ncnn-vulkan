@@ -268,14 +268,16 @@ add_custom_target(generate-spirv DEPENDS ${SHADER_SPV_HEX_FILES})
 
 include_directories(external/dirent external/stb)
 
-add_executable(waifu2x-ncnn-vulkan main.cpp)
-add_library(waifu2x-ncnn-vulkan-lib SHARED api.cpp waifu2x.cpp)
-add_library(waifu2x-ncnn-vulkan-lib-static STATIC api.cpp waifu2x.cpp)
+set(WAIFU2X_SRC api.cpp waifu2x.cpp)
+
+add_executable(waifu2x-ncnn-vulkan-cli main.cpp)
+add_library(waifu2x-ncnn-vulkan-lib SHARED ${WAIFU2X_SRC})
+add_library(waifu2x-ncnn-vulkan-lib-static STATIC ${WAIFU2X_SRC})
 set_target_properties(waifu2x-ncnn-vulkan-lib PROPERTIES OUTPUT_NAME "waifu2x-ncnn-vulkan")
 set_target_properties(waifu2x-ncnn-vulkan-lib-static PROPERTIES OUTPUT_NAME "waifu2x-ncnn-vulkan-static")
 target_compile_definitions(waifu2x-ncnn-vulkan-lib PRIVATE _WINDLL)
 
-add_dependencies(waifu2x-ncnn-vulkan waifu2x-ncnn-vulkan-lib-static)
+add_dependencies(waifu2x-ncnn-vulkan-cli waifu2x-ncnn-vulkan-lib-static)
 add_dependencies(waifu2x-ncnn-vulkan-lib generate-spirv)
 add_dependencies(waifu2x-ncnn-vulkan-lib-static generate-spirv)
 
@@ -303,6 +305,6 @@ if(APPLE AND USE_STATIC_MOLTENVK)
     )
 endif()
 
-target_link_libraries(waifu2x-ncnn-vulkan waifu2x-ncnn-vulkan-lib-static ${WAIFU2X_LINK_LIBRARIES})
+target_link_libraries(waifu2x-ncnn-vulkan-cli waifu2x-ncnn-vulkan-lib-static ${WAIFU2X_LINK_LIBRARIES})
 target_link_libraries(waifu2x-ncnn-vulkan-lib ${WAIFU2X_LINK_LIBRARIES})
 target_link_libraries(waifu2x-ncnn-vulkan-lib-static ${WAIFU2X_LINK_LIBRARIES})

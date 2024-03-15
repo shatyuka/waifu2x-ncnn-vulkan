@@ -29,6 +29,20 @@ typedef void* waifu2x_t;
 #define WAIFU2X_PARAM_SCALE 1
 #define WAIFU2X_PARAM_TILE_SIZE 2
 
+enum waifu2x_status
+{
+    Ok,
+
+    Warning,
+    CpuMode = Warning,
+    D3DMappingLayers,
+
+    Error,
+    NotAvailable = Error,
+    TestNotPassed,
+    NotInitialized,
+};
+
 EXTERN_C DLL_EXPORT int ncnn_get_default_gpu_index();
 EXTERN_C DLL_EXPORT const char* ncnn_get_gpu_name(int gpuid);
 
@@ -39,5 +53,6 @@ EXTERN_C DLL_EXPORT int waifu2x_process(waifu2x_t waifu2x, int w, int h, int c, 
 EXTERN_C DLL_EXPORT int waifu2x_process_cpu(waifu2x_t waifu2x, int w, int h, int c, const void* in_data, void* out_data);
 EXTERN_C DLL_EXPORT void waifu2x_set_param(waifu2x_t waifu2x, int param, int value);
 EXTERN_C DLL_EXPORT int waifu2x_get_param(waifu2x_t waifu2x, int param);
+EXTERN_C DLL_EXPORT waifu2x_status waifu2x_self_test(waifu2x_t waifu2x);
 
 #endif // API_H
