@@ -35,7 +35,7 @@ endmacro()
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 if(OPENMP_FOUND)
-    if(MSVC AND ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64" AND ${MSVC_VERSION} GREATER_EQUAL 1929)
+    if(MSVC AND ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64" AND "${MSVC_VERSION}" GREATER_EQUAL 1929)
         set(OpenMP_C_FLAGS "${OpenMP_C_FLAGS}:llvm")
         set(OpenMP_CXX_FLAGS "${OpenMP_CXX_FLAGS}:llvm")
     endif()
@@ -267,6 +267,9 @@ endif()
 add_custom_target(generate-spirv DEPENDS ${SHADER_SPV_HEX_FILES})
 
 include_directories(external/dirent external/stb)
+
+add_compile_options("$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:RELEASE>>:/Zi>")
+add_link_options("$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:RELEASE>>:/debug;/OPT:REF>")
 
 set(WAIFU2X_SRC api.cpp waifu2x.cpp)
 

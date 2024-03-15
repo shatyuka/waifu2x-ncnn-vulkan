@@ -86,18 +86,23 @@ int waifu2x_get_param(waifu2x_t waifu2x, int param)
     }
 }
 
-thread_local sigjmp_buf waifu2x_self_test_jmpbuf;
+thread_local jmp_buf waifu2x_self_test_jmpbuf;
 
 void waifu2x_self_test_signal_handler(int signal)
 {
-    siglongjmp(waifu2x_self_test_jmpbuf, 1);
+    longjmp(waifu2x_self_test_jmpbuf, 1); // NOLINT(*-err52-cpp)
 }
 
 waifu2x_status waifu2x_self_test(waifu2x_t waifu2x)
 {
     waifu2x_status result;
-    sig_t old_sigsegv_handler = signal(SIGSEGV, &waifu2x_self_test_signal_handler);
-    if (sigsetjmp(waifu2x_self_test_jmpbuf, 1) == 0)
+#ifdef _WIN32
+    _crt_signal_t old_sigsegv_handler;
+#elif
+    sig_t old_sigsegv_handler;
+#endif
+    old_sigsegv_handler = signal(SIGSEGV, &waifu2x_self_test_signal_handler);
+    if (setjmp(waifu2x_self_test_jmpbuf) == 0) // NOLINT(*-err52-cpp)
     {
         if (!waifu2x)
         {
