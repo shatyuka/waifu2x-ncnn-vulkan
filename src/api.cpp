@@ -5,8 +5,14 @@
 #include "api.h"
 #include "waifu2x.h"
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <excpt.h>
+#else
 #include <csignal>
 #include <csetjmp>
+#endif
 
 int ncnn_get_default_gpu_index()
 {
@@ -86,23 +92,38 @@ int waifu2x_get_param(waifu2x_t waifu2x, int param)
     }
 }
 
-thread_local jmp_buf waifu2x_self_test_jmpbuf;
-
-void waifu2x_self_test_signal_handler(int signal)
+#ifdef _WIN32
+int exception_filter(unsigned int code)
 {
-    longjmp(waifu2x_self_test_jmpbuf, 1); // NOLINT(*-err52-cpp)
+    if (code == EXCEPTION_ACCESS_VIOLATION)
+        return EXCEPTION_EXECUTE_HANDLER;
+    return EXCEPTION_CONTINUE_SEARCH;
 }
+
+LONG unhandled_exception_filter(_EXCEPTION_POINTERS* ExceptionInfo)
+{
+    if (ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
+        return EXCEPTION_EXECUTE_HANDLER;
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+#else
+thread_local sigjmp_buf waifu2x_self_test_jmpbuf;
+void signal_handler(int signal)
+{
+    siglongjmp(waifu2x_self_test_jmpbuf, 1);
+}
+#endif
 
 waifu2x_status waifu2x_self_test(waifu2x_t waifu2x)
 {
     waifu2x_status result;
 #ifdef _WIN32
-    _crt_signal_t old_sigsegv_handler;
+    LPTOP_LEVEL_EXCEPTION_FILTER old_exception_filter = SetUnhandledExceptionFilter(&unhandled_exception_filter);
+    __try
 #elif
-    sig_t old_sigsegv_handler;
+    sig_t old_sigsegv_handler = signal(SIGSEGV, &signal_handler);
+    if (sigsetjmp(waifu2x_self_test_jmpbuf, 1) == 0)
 #endif
-    old_sigsegv_handler = signal(SIGSEGV, &waifu2x_self_test_signal_handler);
-    if (setjmp(waifu2x_self_test_jmpbuf) == 0) // NOLINT(*-err52-cpp)
     {
         if (!waifu2x)
         {
@@ -117,11 +138,19 @@ waifu2x_status waifu2x_self_test(waifu2x_t waifu2x)
             result = out[0] == 0 ? TestNotPassed : Ok;
         }
     }
+#ifdef _WIN32
+    __except(exception_filter(GetExceptionCode()))
+#elif
     else
+#endif
     {
-        // TODO: release resources
+        ncnn::destroy_gpu_instance();
         result = NotAvailable;
     }
+#ifdef _WIN32
+    SetUnhandledExceptionFilter(old_exception_filter);
+#else
     signal(SIGSEGV, old_sigsegv_handler);
+#endif
     return result;
 }
