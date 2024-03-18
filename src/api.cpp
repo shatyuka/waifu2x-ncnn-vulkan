@@ -120,7 +120,7 @@ waifu2x_status waifu2x_self_test(waifu2x_t waifu2x)
 #ifdef _WIN32
     LPTOP_LEVEL_EXCEPTION_FILTER old_exception_filter = SetUnhandledExceptionFilter(&unhandled_exception_filter);
     __try
-#elif
+#else
     sig_t old_sigsegv_handler = signal(SIGSEGV, &signal_handler);
     if (sigsetjmp(waifu2x_self_test_jmpbuf, 1) == 0)
 #endif
@@ -140,7 +140,7 @@ waifu2x_status waifu2x_self_test(waifu2x_t waifu2x)
     }
 #ifdef _WIN32
     __except(exception_filter(GetExceptionCode()))
-#elif
+#else
     else
 #endif
     {
