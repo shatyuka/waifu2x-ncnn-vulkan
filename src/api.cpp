@@ -128,6 +128,7 @@ waifu2x_status waifu2x_self_test(waifu2x_t waifu2x)
         if (!waifu2x)
         {
             int gpu_id = ncnn_get_default_gpu_index();
+            ncnn::destroy_gpu_instance();
             result = gpu_id == -1 ? CpuMode : Ok;
         }
         else
